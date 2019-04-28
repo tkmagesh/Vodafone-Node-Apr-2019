@@ -4,24 +4,40 @@ var express = require('express'),
 
 
 
-router.get('/', (req, res) => {
-	res.json(bugService.getAll());
+router.get('/', async (req, res) => {
+	try {
+		var bugs = await bugService.getAll();
+		res.json(bugs);
+	} catch(err){
+		res.status(500).end();
+	}
 });
 
 router.get('/:id', (req, res) => {
-	var bugId = parseInt(req.params.id),
-		bugResult = bugService.get(bugId);
-	if (bugResult){
-		res.json(bugResult);
-	} else {
-		res.status(404).end();
-	}
+	var bugId = parseInt(req.params.id);
+	bugService.get(bugId)
+		.then(bugResult => {
+			if (bugResult){
+				res.json(bugResult);	
+			} else {
+				res.status(404).end();
+			}
+		})
+		.catch(err => {
+			res.status(500).end();
+		});	
 });
 
 router.post('/', (req, res) => {
 	var bugData = req.body;
-	var newBug = bugService.addNew(bugData);
-	res.status(201).json(newBug);
+	bugService
+		.addNew(bugData)
+		.then(newBug => {
+			res.status(201).json(newBug);
+		})
+		.catch(err => {
+			res.status(500).end();
+		})	
 });
 
 router.put('/:id', (req, res) => {

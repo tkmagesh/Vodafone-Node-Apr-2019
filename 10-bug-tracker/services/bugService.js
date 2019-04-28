@@ -1,28 +1,39 @@
-var bugList = [
-	{id : 1, name : 'Data integrity checks failed', isClosed : false},
-	{id : 2, name : 'Server communication failure', isClosed : false},
-	{id : 3, name : 'User actions not recognized', isClosed : false},
-];
+var bugDb = require('../db/bugDb');
 
-function getAll(){
-	return bugList;
+
+
+async function getAll(){
+	return await bugDb.getData()
 }
 
 function get(id){
-	bugResult = bugList.find(bug => bug.id === id)
-	if (bugResult){
-		return bugResult;
-	} else {
-		return null;
-	}
+	return bugDb
+		.getData()
+		.then(bugList => {
+			var bugResult = bugList.find(bug => bug.id === id)
+			if (bugResult){
+				return bugResult;
+			} else {
+				return null;
+			}
+		});
 }
 
-function addNew(bugData){
-	if (bugData.id === 0){
-		bugData.id = bugList.reduce((result, bug) => result > bug.id ? result : bug.id, 0) + 1;
-	}
-	bugList.push(bugData);
-	return bugData;
+function addNew(bugData, callback){
+
+	return bugDb
+		.getData()
+		.then(bugList => {
+			if (bugData.id === 0){
+				bugData.id = bugList.reduce((result, bug) => result > bug.id ? result : bug.id, 0) + 1;
+			}
+			bugList.push(bugData);
+			return bugDb
+				.saveData(bugList)
+				.then(() => {
+					return bugData;
+				});
+		});
 }
 
 function update(bugId, bugData){
